@@ -1,0 +1,21 @@
+.log {
+  color: blue;
+}
+
+.you {
+  font-weight: bold;
+}
+
+body {
+  color: #555;
+}
+
+*, *:before, *:after {
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
+
+.new-message {
+  width: 100%;
+}
