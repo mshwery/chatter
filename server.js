@@ -1,25 +1,27 @@
-var express = require('express');
-var app = express();
-var port = process.env.PORT || 8000;
+/*jshint laxcomma:true*/
 
-app.set('views', __dirname + '/templates');
-app.set('view engine', "jade");
-app.engine('jade', require('jade').__express); // 'splain this
+var express = require('express')
+  , io = require('socket.io')
+  , app = express()
+  , port = process.env.PORT || 8000;
+
+app.configure(function() {
+  app.set('view engine', "jade");
+  app.set('views', __dirname + '/templates');
+  app.engine('jade', require('jade').__express); // 'splain this
+  app.use(express.static(__dirname + '/public'));
+});
 
 app.get('/', function(req, res) {
   res.render('chat');
 });
 
-app.use(express.static(__dirname + '/public'));
-
-//app.listen(port);
-var io = require('socket.io').listen(app.listen(port));
 console.log('Listening on port ' + port);
 
-io.sockets.on('connection', function (socket) {
-  
+io.listen(app.listen(port)).sockets.on('connection', function (socket) {
+
   socket.emit('message', { message: 'welcome to the chat', timestamp: new Date().getTime() });
-  
+
   socket.on('send', function (data) {
     data.timestamp = new Date().getTime();
     io.sockets.emit('message', data);
@@ -33,4 +35,11 @@ io.sockets.on('connection', function (socket) {
     io.sockets.emit('stopped typing', data);
   });
 
+  socket.on('disconnect', function(data) {
+    console.log('Client disconnected');
+    io.sockets.emit('disconnected', { client: 'waaaaa' });
+    // remove from connected clients
+    var i = clients.indexOf(socket);
+    clients.splice(i, 1);
+  });
 });

@@ -16,12 +16,39 @@
 $(document).ready(function() {
 
   var messages = [],
+      users = {},
+      typers = {},
       socket = io.connect('/'),
       user = 'Fedmate ' + parseInt(Math.random() * 1000, 10);
 
   // dom els
   var $newMessage = $('.new-message'),
-      $messages = $("#messages");
+      $messages = $("#messages"),
+      $userList = $("#user-list");
+
+  function addUser(data) {
+    if (data) {
+      users[data.client] = $('<li/>').text(data.client).appendTo($userList);
+    }
+  }
+
+  function removeUser(data) {
+    if (users[data.client]) users[data.client].remove();
+  }
+
+  function addTyper(data) {
+    if (data && !typers[data.username]) {
+      typers[data.username] = $('<span/>').text(data.username + ' is typing...').appendTo('#content');
+    }
+  }
+
+  function removeTyper(data) {
+    if (data) {
+      console.log(data);
+      if (typers[data.username]) typers[data.username].remove();
+      delete typers[data.username];
+    }
+  }
 
   function addMessage(data) {
     if (data) {
@@ -39,24 +66,6 @@ $(document).ready(function() {
     }
   }
 
-  var typers = {};
-
-  function addTyper(data) {
-    if (data && !typers[data.username]) {
-      typers[data.username] = $('<span/>').text(data.username + ' is typing...').appendTo('#content');
-    }
-  }
-
-  function removeTyper(data) {
-    if (data) {
-      console.log(data);
-      if (typers[data.username]) typers[data.username].remove();
-      delete typers[data.username];
-    }
-  }
-
-  var typing = false;
-
   function sendMessage() {
     var text = $newMessage.val();
     if (text) {
@@ -66,7 +75,17 @@ $(document).ready(function() {
     }
   }
 
-  var typingTimeout = null;
+  // set up channel subscriptions
+  socket.on("message", addMessage);
+  socket.on("typing", addTyper);
+  socket.on("stopped typing", removeTyper);
+  socket.on("connected", addUser);
+  socket.on("disconnected", removeUser);
+
+  // handle if the user is typing or not
+  var typingTimeout = null,
+      typing = false;
+
   function isTyping(newValue) {
     typing = !!newValue;
 
@@ -79,10 +98,7 @@ $(document).ready(function() {
     }
   }
 
-  socket.on("message", addMessage);
-  socket.on("typing", addTyper);
-  socket.on("stopped typing", removeTyper);
-
+  // bind enter key, and isTyping publisher
   $newMessage
     .on('keypress', function(e) {
       if ( e.keyCode == 13 ) {
