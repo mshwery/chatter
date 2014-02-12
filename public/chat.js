@@ -49,7 +49,8 @@ $(document).ready(function() {
 
   function removeTyper(data) {
     if (data) {
-      typers[data.username].remove();
+      console.log(data);
+      if (typers[data.username]) typers[data.username].remove();
       delete typers[data.username];
     }
   }
@@ -61,19 +62,21 @@ $(document).ready(function() {
     if (text) {
       socket.emit('send', { message: text, username: user });
       $newMessage[0].value = '';
-      typing = false;
+      isTyping(false);
     }
   }
 
   var typingTimeout = null;
-  function isTyping() {
-    if (typing) {
+  function isTyping(newValue) {
+    typing = !!newValue;
+
+    if (newValue) {
+      if (typingTimeout) clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(isTyping, 5000);
       socket.emit('typing', { username: user });
     } else {
       socket.emit('stopped typing', { username: user });
     }
-
-    typingTimeout = setTimeout(isTyping, 2000);
   }
 
   socket.on("message", addMessage);
@@ -87,8 +90,8 @@ $(document).ready(function() {
       }
     })
     .on('keyup', function(e) {
-      typing = !!this.value.length;
-      if (!typingTimeout) isTyping();
+      var newValue = !!this.value.length;
+      if (typing != newValue) isTyping(newValue);
     });
 
 });
