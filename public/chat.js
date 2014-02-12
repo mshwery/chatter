@@ -16,8 +16,8 @@
 $(document).ready(function() {
 
   var messages = [],
-      socket = io.connect('http://localhost:3000'),
-      user = 'FedMate ' + parseInt(Math.random() * 1000, 10);
+      socket = io.connect('/'),
+      user = 'Fedmate ' + parseInt(Math.random() * 1000, 10);
 
   // dom els
   var $newMessage = $('.new-message'),
