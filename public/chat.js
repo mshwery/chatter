@@ -1,3 +1,18 @@
+(function() {
+
+  function urlsToHtml(text) {
+      var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+      return text.replace(exp,"<a href='$1' target='_blank'>$1</a>");
+  }
+
+  $.fn.linkify = function() {
+    var text = urlsToHtml(this.text());
+    this.html(text);
+    return this;
+  };
+
+})();
+
 $(document).ready(function() {
 
   var messages = [],
@@ -5,16 +20,15 @@ $(document).ready(function() {
       user = 'FedMate ' + parseInt(Math.random() * 1000, 10);
 
   // dom els
-  var $newMessage = $('.new-message');
-  var $messages = $("#messages");
-  var name = document.getElementById('name');
+  var $newMessage = $('.new-message'),
+      $messages = $("#messages");
 
   function addMessage(data) {
     if (data) {
       messages.push(data.message);
       var klass = !data.username ? 'log' : ( (user == data.username) ? 'you' : '' );
-      var username = $("<b/>").addClass(klass).text( (data.username || 'Server') + ': ' ),
-          text = $("<span/>").text(data.message),
+      var username = $("<b/>").addClass(klass).text( '[' + moment(data.timestamp).format('h:mm:ss a') + '] ' + (data.username || 'Server') + ': ' ),
+          text = $("<span/>").text(data.message).linkify(),
           html = $("<li/>").append(username).append(text);
       $messages.append(html);
     } else {

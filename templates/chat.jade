@@ -3,6 +3,7 @@ html
   head
     title= "Real time web chat"
     styl
+    link(rel='stylesheet', href='/normalize.css')
     link(rel='stylesheet', href='/chat.css')
   body
     #content(style='width: 500px; height: 300px; margin: 0 0 20px 0; border: solid 1px #999; overflow-y: scroll;')
@@ -10,5 +11,6 @@ html
     .controls
       input.new-message
     script(src='//code.jquery.com/jquery.js')
+    script(src='/moment.min.js')
     script(src='/chat.js')
     script(src='/socket.io/socket.io.js')
