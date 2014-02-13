@@ -6,12 +6,13 @@ html
     link(rel='stylesheet', href='/chat.css')
     meta(name="viewport", content="width=device-width, initial-scale=1.0, user-scalable=no")
   body
+    #pings
     ul#user-list
     #content
       ul#messages
-    .controls
-      input.new-message(type='text')
+    form.controls
+      input.new-message(type='text', autocomplete='off')
     script(src='//code.jquery.com/jquery.js')
     script(src='/moment.min.js')
-    script(src='/socket.io/socket.io.js')
+    script(src='http://cdn.sockjs.org/sockjs-0.3.min.js')
     script(src='/chat.js')
