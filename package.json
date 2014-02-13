@@ -10,7 +10,6 @@
     "jade": "latest",
     "jquery": "latest",
     "moment": "latest",
-    "redis-url": "~0.2.0",
     "heroku-redis-client": "~0.3.3"
   },
   "devDependencies": {

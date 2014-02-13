@@ -1,13 +1,13 @@
 doctype html
 html
   head
-    title= "Hot Air Room"
+    title= "Fed Chat"
     link(rel='stylesheet', href='/normalize.css')
     link(rel='stylesheet', href='/chat.css')
     meta(name="viewport", content="width=device-width, initial-scale=1.0, user-scalable=no")
   body
-    #pings
-    ul#user-list
+    form#new-user
+      input#username(type='text', autocomplete='off', placeholder='Name')
     #content
       ul#messages
     form.controls
@@ -15,4 +15,5 @@ html
     script(src='//code.jquery.com/jquery.js')
     script(src='/moment.min.js')
     script(src='http://cdn.sockjs.org/sockjs-0.3.min.js')
+    script(src='/sock-pubsub.js')
     script(src='/chat.js')

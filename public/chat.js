@@ -15,42 +15,110 @@
 
 })();
 
+var $messages = $("#messages");
+
+var printLine = function(message){
+  $messages.append( $("<li/>").append( $("<code>").text(message) ).append("<br>") );
+  $messages.scrollTop($messages.scrollTop()+10000);
+};
+
+function socketChatRoom(username) {
+  var sckt = new socket('chat');
+
+  sckt.on('connect', function() {
+    printLine('Connected');
+    sckt.emit('join', {
+      username: username
+    });
+  });
+
+  // Start socket instance
+  sckt.connect();
+
+  return sckt;
+}
+
+function setupChatRoom() {
+  var username = $("#username").val();
+
+  if (username.length) {
+
+    var sckt = socketChatRoom(username);
+
+    $("#new-user").remove();
+
+    var messages      = []
+        , users       = {}
+        , typers      = {};
+
+    // elements
+    var $newMessage = $('.new-message')
+        , $userList = $("#user-list");
+
+    var addMessage = function (data) {
+      if (data) {
+        messages.push(data.message);
+        var klasses = ['user'];
+
+        klasses.push( (!data.username ? 'log' : ( (username == data.username) ? 'you' : '' )) );
+
+        var username = $("<span/>").addClass(klasses.join(' ')).text( '[' + moment(data.timestamp).format('h:mm:ss a') + '] ' + (data.username || 'Server') + ': ' ),
+            text = $("<span/>").text(data.message).linkify(),
+            html = $("<li/>").append(username).append(text);
+        $messages.append(html);
+      } else {
+        console.log('Nope: ', data);
+      }
+    };
+
+    var sendMessage = function () {
+      var text = $newMessage.val();
+      if (text) {
+        sckt.emit("chat", {
+          message: text
+        });
+        $newMessage[0].value = '';
+        //isTyping(false);
+      }
+    };
+
+    sckt.on('chat', addMessage);
+
+    // bind enter key, and isTyping publisher
+    $newMessage
+      .on('keypress', function(e) {
+        if ( e.keyCode == 13 ) {
+          sendMessage();
+          e.preventDefault();
+        }
+      })
+      .on('keyup', function(e) {
+        var newValue = !!this.value.length;
+        //if (typing != newValue) isTyping(newValue);
+      })
+      .focus();
+
+    $('form').on('submit', function(e) {
+      e.preventDefault();
+    });
+
+  }
+}
+
 $(document).ready(function() {
 
-  var messages      = []
-      , users       = {}
-      , typers      = {}
-      , sockjs_url  = '/chat'
-      , sockjs      = new SockJS(sockjs_url)
-      , user        = 'guest ' + new Date().getSeconds();
+  var $userForm = $("#new-user");
 
-  // elements
-  var $newMessage = $('.new-message')
-      , $messages = $("#messages")
-      , $userList = $("#user-list")
-      , div       = $("#pings");
-
-  var print = function(message){
-    div.append($("<code>").text(message));
-    div.append($("<br>"));
-    div.scrollTop(div.scrollTop()+10000);
-  };
-
-  sockjs.onopen = function() {
-    print('Connected');
-  };
-  sockjs.onmessage = function(e) {
-    var data = JSON.parse(e.data);
-    if (data.message) {
-      addMessage(data.message);
-    } else {
-      print(data);
+  $userForm.on('submit', function(e) {
+    setupChatRoom();
+    e.preventDefault();
+  });
+  $userForm.find('input').on('keypress', function(e) {
+    if (e.keyCode == 13) {
+      setupChatRoom();
+      e.preventDefault();
     }
-    console.log(data);
-  };
-  sockjs.onclose = function() {
-    print('Closing connection.');
-  };
+  });
 
   function addUser(data) {
     if (data) {
@@ -76,42 +144,6 @@ $(document).ready(function() {
     }
   }
 
-  function addMessage(data) {
-    if (data) {
-      messages.push(data.message);
-      var klasses = ['user'];
-
-      klasses.push( (!data.user ? 'log' : ( (user == data.user) ? 'you' : '' )) );
-
-      var username = $("<span/>").addClass(klasses.join(' ')).text( '[' + moment(data.timestamp).format('h:mm:ss a') + '] ' + (data.user || 'Server') + ': ' ),
-          text = $("<span/>").text(data.message).linkify(),
-          html = $("<li/>").append(username).append(text);
-      $messages.append(html);
-    } else {
-      console.log('Nope: ', data);
-    }
-  }
-
-  function sendMessage() {
-    var text = $newMessage.val();
-    if (text) {
-      sockjs.send(JSON.stringify({
-        message: {
-          user: user,
-          message: text
-        }
-      }));
-      $newMessage[0].value = '';
-      isTyping(false);
-    }
-  }
-
-  // set up channel subscriptions
-  // socket.on("typing", addTyper);
-  // socket.on("stopped typing", removeTyper);
-  // socket.on("connected", addUser);
-  // socket.on("disconnected", removeUser);
-
   // handle if the user is typing or not
   var typingTimeout = null,
       typing = false;
@@ -127,31 +159,5 @@ $(document).ready(function() {
       //socket.emit('stopped typing', { username: user });
     }
   }
-
-  // bind enter key, and isTyping publisher
-  $newMessage
-    .on('keypress', function(e) {
-      if ( e.keyCode == 13 ) {
-        sendMessage();
-        e.preventDefault();
-      }
-    })
-    .on('keyup', function(e) {
-      var newValue = !!this.value.length;
-      if (typing != newValue) isTyping(newValue);
-    })
-    .focus();
-
-  $('form').on('submit', function(e) {
-    e.preventDefault();
-  });
-
-  // socket.onmessage = function (event) {
-  //   console.log(event);
-  //   var data = JSON.parse(event.data);
-  //   if (data.message) {
-  //     addMessage(data.message);
-  //   }
-  // };
 
 });
