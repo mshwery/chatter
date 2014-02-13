@@ -3,7 +3,7 @@
 var http    = require('http')
   , express = require('express')
   , sockjs  = require('sockjs')
-  , redis   = require('redis')
+  , redis   = require('heroku-redis-client')
   , app     = express()
   , port    = process.env.PORT || 5000;
 
