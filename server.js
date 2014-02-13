@@ -3,7 +3,7 @@
 var express = require('express')
   , io = require('socket.io')
   , app = express()
-  , port = process.env.PORT || 8000;
+  , port = process.env.PORT || 5000;
 
 app.configure(function() {
   app.set('view engine', "jade");
@@ -18,7 +18,8 @@ app.get('/', function(req, res) {
 
 console.log('Listening on port ' + port);
 
-io.listen(app.listen(port)).sockets.on('connection', function (socket) {
+var io = require('socket.io').listen(app.listen(port));
+io.sockets.on('connection', function (socket) {
 
   socket.emit('message', { message: 'welcome to the chat', timestamp: new Date().getTime() });
 
@@ -35,11 +36,4 @@ io.listen(app.listen(port)).sockets.on('connection', function (socket) {
     io.sockets.emit('stopped typing', data);
   });
 
-  socket.on('disconnect', function(data) {
-    console.log('Client disconnected');
-    io.sockets.emit('disconnected', { client: 'waaaaa' });
-    // remove from connected clients
-    var i = clients.indexOf(socket);
-    clients.splice(i, 1);
-  });
 });
