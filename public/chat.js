@@ -62,10 +62,10 @@ function setupChatRoom() {
 
         klasses.push( (!data.username ? 'log' : ( (username == data.username) ? 'you' : '' )) );
 
-        var username = $("<span/>").addClass(klasses.join(' ')).text( '[' + moment(data.timestamp).format('h:mm:ss a') + '] ' + (data.username || 'Server') + ': ' ),
-            text = $("<span/>").text(data.message).linkify(),
-            html = $("<li/>").append(username).append(text);
-        $messages.append(html);
+        var $user = $("<span/>").addClass(klasses.join(' ')).text( '[' + moment(data.timestamp).format('h:mm:ss a') + '] ' + (data.username || 'Server') + ': ' ),
+            $text = $("<span/>").text(data.message).linkify(),
+            $html = $("<li/>").append($user).append($text);
+        $messages.append($html);
       } else {
         console.log('Nope: ', data);
       }
