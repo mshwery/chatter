@@ -79,3 +79,9 @@ ul {
   width: 100%;
   padding: 5px;
   font-size: 1em; }
+
+.img {
+  display: block; }
+  .img img {
+    width: 100%;
+    max-width: 300px; }
