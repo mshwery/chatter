@@ -27,11 +27,11 @@ textarea {
 }
 
 .log {
-  color: blue;
+  color: #222;
 }
 
 .you {
-  font-weight: bold;
+  color: #2288CA;
 }
 
 #new-user {
@@ -69,6 +69,7 @@ textarea {
   height: 100%;
   padding: 20px 20px 100px;
   overflow-y: scroll;
+  font-family: Monaco, 'Andale Mono', 'Courier New', monospace;
 }
 
 ul {
@@ -93,8 +94,21 @@ ul {
   font-size: 1em;
 }
 
+a {
+  color: #0069d6;
+
+  &:hover {
+    color: #00438a;
+    text-decoration: underline;
+  }
+  &:visited {
+    color: #00438a;
+  }
+}
+
 .img {
   display: block;
+  max-width: 300px;
 
   img {
     width: 100%;
