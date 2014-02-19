@@ -2,49 +2,66 @@
 
 var sockjs = require('sockjs')
     , redis = require('heroku-redis-client') // Redis pubsub using heroku wrapper
+    , chuckt = require('./chuckt_redis')
     , db = require('./chat-db');
 
+// object to store usernames
+var usernames = {},
+    namesUsed = [];
+
 exports.listen = function(server) {
+
+  // To set a global reference to all clients
+  var connections={};
+
+  // A global reference to the redis publisher
   var publisher = redis.createClient();
 
   // Sockjs server
   var sockjs_opts = {sockjs_url: "http://cdn.sockjs.org/sockjs-0.3.min.js"};
-  var sockjs_chat = sockjs.createServer(sockjs_opts);
-  sockjs_chat.installHandlers(server, { prefix:'/chat' });
+  var sock = sockjs.createServer(sockjs_opts);
+  sock.installHandlers(server, { prefix:'/chat' });
 
-  sockjs_chat.on('connection', function(socket) {
-    var browser = redis.createClient();
-    browser.subscribe('chat');
-    browser._username = '';
+  sock.on('connection', function(conn) {
+    var socket = new ChuckT(conn, connections, publisher);
 
     initializeConnection(socket);
-    handleMessageBroadcast(browser, socket);
-    handleMessageReceipt(socket, publisher, browser);
+    handleMessageBroadcasting(socket);
+    handleChoosingNicknames(socket);
+    handleClientDisconnections(conn); // chuckt doesn't surface the disconnect
   });
 };
 
-function initializeConnection(socket) {
 
+function initializeConnection(socket) {
+  socket.emitToBrowser('joined', 'Connected');
 }
 
-function handleMessageBroadcast(browser, socket) {
-  // When we see a message on chat_channel, send it to the browser
-  browser.on("message", function(channel, message){
-    var data = JSON.parse(message);
-    data.data["username"] = browser._username; // send with username
-    socket.write(JSON.stringify(data));
+function handleMessageBroadcasting(socket) {
+  socket.on('chat-message', function(msg) {
+    console.log(msg);
+    var username = usernames[socket.id];
+    socket.emitToAllBrowsers('chat-message', { username: username, message: msg, timestamp: Date.now() });
   });
 }
 
-function handleMessageReceipt(socket, publisher, browser) {
-  socket.on('data', function(message) {
-    var data = JSON.parse(message);
-    
-    if (data.name == 'join') {
-      browser._username = data.data.username; // set the user
+function handleChoosingNicknames(socket) {
+  socket.on('choose-name', function(name, callback) {
+    if (namesUsed.indexOf(name) !== -1) {
+      callback('That name is already taken!  Please choose another one.');
+      return socket.conn.close();
     }
+    var ind = namesUsed.push(name) - 1;
+    usernames[socket.id] = name;
+    callback(null);
+    socket.emitToAllBrowsers('new user', {id: ind, username: name});
+  });
+}
 
-    console.log(data);
-    publisher.publish('chat', JSON.stringify(data));
+function handleClientDisconnections(socket) {
+  socket.on('close', function() {
+    var ind = namesUsed.indexOf(usernames[socket.id]);
+    delete namesUsed[ind];
+    console.log('%s disconnected', ind);
   });
 }

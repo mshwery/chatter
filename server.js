@@ -17,11 +17,11 @@ var app = express();
 // express settings
 require('./config/express')(app, config);
 
+// routes
+require('./config/routes')(app);
+
 // Express server
 var server = http.createServer(app).listen(port);
 chatServer.listen(server);
-console.log('Express app started on port '+port);
 
-app.get('/', function(req, res) {
-  res.render('chat');
-});
+console.log('Express app started on port '+port);

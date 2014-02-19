@@ -6,15 +6,17 @@ html
     link(rel='stylesheet', href='/chat.css')
     meta(name="viewport", content="width=device-width, initial-scale=1.0, user-scalable=no")
   body
+    aside#channels
+    #content
+      #messages
+      form.controls
+        input.new-message(type='text', autocomplete='off')
     form#new-user
       input#username(type='text', autocomplete='off', placeholder='Name')
-    #content
-      ul#messages
-    form.controls
-      input.new-message(type='text', autocomplete='off')
     script(src='//code.jquery.com/jquery.js')
     script(src='/moment.min.js')
     script(src='http://cdn.sockjs.org/sockjs-0.3.min.js')
-    script(src='/sock-pubsub.js')
+    script(src='/chuckt.js')
     script(src='/linkify.js')
+    script(src='/imagify.js')
     script(src='/chat.js')

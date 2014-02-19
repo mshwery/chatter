@@ -1,10 +1,12 @@
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,700);
 html, body {
   height: 100%;
   width: 100%; }
 
 body {
-  color: #555;
-  font-size: 13px; }
+  color: #333;
+  font-size: 14px;
+  font-family: 'Open Sans', Arial, Tahoma, sans-serif; }
 
 *, *:before, *:after {
   box-sizing: border-box;
@@ -22,11 +24,14 @@ textarea {
     border-color: blue;
     color: #222; }
 
-.log {
-  color: #222; }
-
-.you {
-  color: #2288CA; }
+.message {
+  margin-top: .5em; }
+  .message .username {
+    font-weight: bold; }
+  .message .timestamp {
+    color: #bbb; }
+  .message .message-content {
+    display: block; }
 
 #new-user {
   position: absolute;
@@ -50,17 +55,25 @@ textarea {
     margin-top: -15px;
     margin-left: -125px; }
 
-#content {
+#channels {
   position: absolute;
   top: 0;
   left: 0;
+  bottom: 0;
+  width: 200px;
+  height: 100%;
+  background: #333;
+  overflow-y: scroll; }
+
+#content {
+  position: absolute;
+  top: 0;
+  left: 200px;
   right: 0;
   bottom: 0;
-  width: 100%;
   height: 100%;
   padding: 20px 20px 100px;
-  overflow-y: scroll;
-  font-family: Monaco, 'Andale Mono', 'Courier New', monospace; }
+  overflow-y: scroll; }
 
 ul {
   list-style: none;
@@ -72,13 +85,11 @@ ul {
   bottom: 0;
   left: 0;
   right: 0;
-  background: #eee;
-  border-top: 1px solid #ccc;
   padding: 10px 20px 30px; }
 
 .new-message {
   width: 100%;
-  padding: 5px;
+  padding: 8px;
   font-size: 1em; }
 
 a {

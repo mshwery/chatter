@@ -1,23 +1,5 @@
 /*jshint laxcomma:true*/
 
-(function() {
-
-  var imageUrlRegex = /(https?:\/\/.*\.(?:png|jpe?g|gif))/i;
-
-  function urlToImage(text) {
-    return text.replace(imageUrlRegex,"<a class='img' href='$1' target='_blank'><img src='$1'/></a>");
-  }
-
-  $.fn.makeImages = function() {
-    var textNodes = this.contents().filter(function () { return this.nodeType === 3; });
-    textNodes.each(function() {
-      $(this).replaceWith( urlToImage( this.textContent ) );
-    });
-    return this;
-  };
-
-})();
-
 var $messages = $("#messages");
 
 function printLine (message){
@@ -25,51 +7,60 @@ function printLine (message){
   $messages.scrollTop($messages.scrollTop()+10000);
 }
 
-function socketChatRoom(username) {
-  var sckt = new socket('chat');
-
-  sckt.on('connect', function() {
-    printLine('Connected');
-    sckt.emit('join', {
-      username: username
-    });
-  });
-
-  // Start socket instance
-  sckt.connect();
-
-  return sckt;
+function handleUserName(err) {
+  if (err) {
+    alert(err);
+  } else {
+    $("#new-user").remove();
+  }
 }
 
-function setupChatRoom() {
-  var username = $("#username").val();
+function socketChatRoom() {
+  var sock = new SockJS('/chat');
+  var chuckt = epixa.chucktify(sock);
+
+  return chuckt;
+}
+
+function setupChatRoom(username) {
 
   if (username.length) {
 
-    var sckt = socketChatRoom(username);
-
-    $("#new-user").remove();
-
-    var messages      = []
-        , users       = {}
-        , typers      = {};
+    var sock = socketChatRoom();
+    sock.on('joined', function(data) {
+      printLine(data);
+      sock.emit('choose-name', username, handleUserName);
+    });
 
     // elements
     var $newMessage = $('.new-message')
-        , $userList = $("#user-list");
+        , $userList = $("#user-list")
+        , lastMessage;
 
     var addMessage = function (data) {
+      console.log(data);
       if (data) {
-        messages.push(data.message);
-        var klasses = ['user'];
+        var klasses = ['username'];
 
-        klasses.push( ( (username == data.username) ? 'you' : '' ) );
+        if (username == data.username) {
+          klasses.push('you');
+        }
 
-        var $date = $("<span/>").addClass('timestamp').text( moment(data.timestamp).format('MMM D YYYY, h:mm:ss a') ),
-            $user = $("<span/>").addClass(klasses.join(' ')).text( ' <' + (data.username || 'Server') + '> ' ),
-            $text = $("<span/>").text(data.message).makeImages().linkify(),
-            $html = $("<li/>").append($date).append($user).append($text);
-        $messages.append($html);
+        var $date = $("<span/>").addClass('timestamp').text( moment(data.timestamp).format('h:mm a') ),
+            $user = $("<span/>").addClass(klasses.join(' ')).text( ' ' + data.username + ' ' ),
+            $text = $("<span/>").addClass('message-content').text(data.message).makeImages().linkify(),
+            $html = $("<div/>").addClass('message');
+        
+        // append message content only if last user is same as this message's user
+        // and its within a reasonable time since previous comment?
+        if ( lastMessage && lastMessage.username == data.username && moment(lastMessage.timestamp).add('minutes', 1) > moment(data.timestamp) ) {
+          $messages.append( $html.append($text) );
+        } else {
+          $messages.append( $html.append($user).append($date).append($text) );
+        }
+        // set last user
+        lastMessage = data;
+
       } else {
         console.log('Nope: ', data);
       }
@@ -78,15 +69,13 @@ function setupChatRoom() {
     var sendMessage = function () {
       var text = $newMessage.val();
       if (text) {
-        sckt.emit("chat", {
-          message: text
-        });
+        sock.emit("chat-message", text);
         $newMessage[0].value = '';
         //isTyping(false);
       }
     };
 
-    sckt.on('chat', addMessage);
+    sock.on('chat-message', addMessage);
 
     // bind enter key, and isTyping publisher
     $newMessage
@@ -111,57 +100,10 @@ function setupChatRoom() {
 
 $(document).ready(function() {
 
-  var $userForm = $("#new-user");
-
-  $userForm.on('submit', function(e) {
-    setupChatRoom();
+  $("#new-user").on('submit', function(e) {
     e.preventDefault();
+    var username = $("#username").val();
+    setupChatRoom(username);
   });
-  $userForm.find('input').on('keypress', function(e) {
-    if (e.keyCode == 13) {
-      setupChatRoom();
-      e.preventDefault();
-    }
-  });
-
-  function addUser(data) {
-    if (data) {
-      users[data.client] = $('<li/>').text(data.client).appendTo($userList);
-    }
-  }
-
-  function removeUser(data) {
-    if (users[data.client]) users[data.client].remove();
-  }
-
-  function addTyper(data) {
-    if (data && !typers[data.username]) {
-      typers[data.username] = $('<span/>').text(data.username + ' is typing...').appendTo('#content');
-    }
-  }
-
-  function removeTyper(data) {
-    if (data) {
-      console.log(data);
-      if (typers[data.username]) typers[data.username].remove();
-      delete typers[data.username];
-    }
-  }
-
-  // handle if the user is typing or not
-  var typingTimeout = null,
-      typing = false;
-
-  function isTyping(newValue) {
-    typing = !!newValue;
-
-    if (newValue) {
-      if (typingTimeout) clearTimeout(typingTimeout);
-      typingTimeout = setTimeout(isTyping, 5000);
-      //socket.emit('typing', { username: user });
-    } else {
-      //socket.emit('stopped typing', { username: user });
-    }
-  }
 
 });
