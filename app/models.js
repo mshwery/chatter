@@ -3,10 +3,27 @@
 var mongoose = require('mongoose')
   , Schema = mongoose.Schema;
  
-var ChatMessageSchema = new Schema({
+var ChatSchema = new Schema({
   username: String,
   message: String,
-  created_at: { type: Date, default: Date.now }
+  created: { type: Date, default: Date.now }
 });
 
-mongoose.model('Message', ChatMessageSchema);
+var Chat = mongoose.model('Message', ChatSchema);
+
+exports.getOldMsgs = function(limit, callback) {
+  var query = Chat.find({});
+  query.sort('-created').limit(limit).exec(function(err, docs) {
+    callback(err, docs);
+  });
+};
+
+exports.saveMsg = function(data, callback) {
+  var newMsg = new Chat({
+    username: data.username,
+    message: data.message
+  });
+  newMsg.save(function(err) {
+    callback(err);
+  });
+};

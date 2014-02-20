@@ -46,14 +46,14 @@ function setupChatRoom(username) {
           klasses.push('you');
         }
 
-        var $date = $("<span/>").addClass('timestamp').text( moment(data.timestamp).format('h:mm a') ),
+        var $date = $("<span/>").addClass('timestamp').text( moment(data.created).format('h:mm a') ),
             $user = $("<span/>").addClass(klasses.join(' ')).text( ' ' + data.username + ' ' ),
             $text = $("<span/>").addClass('message-content').text(data.message).makeImages().linkify(),
             $html = $("<div/>").addClass('message');
         
         // append message content only if last user is same as this message's user
         // and its within a reasonable time since previous comment?
-        if ( lastMessage && lastMessage.username == data.username && moment(lastMessage.timestamp).add('minutes', 1) > moment(data.timestamp) ) {
+        if ( lastMessage && lastMessage.username == data.username && moment(lastMessage.created).add('minutes', 1) > moment(data.created) ) {
           $messages.append( $html.append($text) );
         } else {
           $messages.append( $html.append($user).append($date).append($text) );
@@ -75,7 +75,15 @@ function setupChatRoom(username) {
       }
     };
 
+    var addOldMessages = function(docs) {
+      console.log(docs);
+      for (var i = docs.length-1; i >= 0; i--) {
+        addMessage(docs[i]);
+      }
+    };
+
     sock.on('chat-message', addMessage);
+    sock.on('load old msgs', addOldMessages);
 
     // bind enter key, and isTyping publisher
     $newMessage

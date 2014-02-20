@@ -35,13 +35,28 @@ exports.listen = function(server) {
 
 function initializeConnection(socket) {
   socket.emitToBrowser('joined', 'Connected');
+  showOldMessages(socket);
+}
+
+function showOldMessages(socket) {
+  db.getOldMsgs(5, function(err, docs){
+    socket.emitToBrowser('load old msgs', docs);
+  });
 }
 
 function handleMessageBroadcasting(socket) {
   socket.on('chat-message', function(msg) {
     console.log(msg);
-    var username = usernames[socket.id];
-    socket.emitToAllBrowsers('chat-message', { username: username, message: msg, timestamp: Date.now() });
+    var username = usernames[socket.id],
+        data = {
+          username: username,
+          message: msg,
+          created: Date.now
+        };
+    db.saveMsg(data, function(err) {
+      if (err) throw err;
+      socket.emitToAllBrowsers('chat-message', data);
+    });
   });
 }
 
