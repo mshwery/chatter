@@ -2,8 +2,10 @@
 
 var mongoose = require('mongoose');
 
+var uristring = process.env.MONGOHQ_URL || 'mongodb://localhost/chat';
+
 // db initialization
-mongoose.connect('mongodb://localhost/chat', function(err) {
+mongoose.connect(uristring, function(err) {
   if (err) {
     console.log(err);
   } else {
